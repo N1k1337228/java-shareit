@@ -9,9 +9,9 @@ import java.util.Optional;
 public interface ItemStorage {
     Optional<Item> getItem(int itemId);
 
-    void addItem(ItemDto item);
+    Item addItem(ItemDto item, int userId);
 
-    void updateItem(ItemDto itemDto, int itemId);
+    Item updateItem(Item item, int itemId);
 
     List<Item> getItemsListOnUsersId(Integer userId);
 

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dal.ItemStorage;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
@@ -29,16 +28,18 @@ public class ItemServiceImpl implements ItemService {
         return itemMapper.toItemDto(item);
     }
 
-    public void addItem(ItemDto item, int userId) {
+    public ItemDto addItem(ItemDto item, int userId) {
         userRepository.getUserOnId(userId).orElseThrow(() ->
-                new ValidationException("Незарегистрированный пользователь не может добавлять вещи"));
-        itemRepository.addItem(item);
+                new NotFoundException("Незарегистрированный пользователь не может добавлять вещи"));
+        return itemMapper.toItemDto(itemRepository.addItem(item, userId));
     }
 
-    public void updateItem(ItemDto itemDto, int itemId, int userId) {
+    public ItemDto updateItem(ItemDto itemDto, int itemId, int userId) {
         userRepository.getUserOnId(userId).orElseThrow(() ->
-                new ValidationException("Незарегистрированный пользователь не может обновлять вещи"));
-        Item item = itemRepository.getItem(itemId).orElseThrow(() -> new NotFoundException(""));
+                new NotFoundException("Незарегистрированный пользователь не может обновлять вещи"));
+        itemRepository.getItem(itemId).orElseThrow(() -> new NotFoundException(""));
+        Item item = itemMapper.fromItemDto(itemDto);
+        return itemMapper.toItemDto(itemRepository.updateItem(item, itemId));
     }
 
     public List<ItemDto> getItemsListOnUsersId(int userId) {

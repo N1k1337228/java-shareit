@@ -24,21 +24,26 @@ public class UserRepository implements UserStorage {
         return new ArrayList<>(userRepository.values());
     }
 
-    public void addUser(User user) {
+    public User addUser(User user) {
         user.setId(idCounter());
         userRepository.put(user.getId(), user);
+        return user;
+
     }
 
     public User updateUser(User user, int userId) {
         User user1 = userRepository.get(userId);
-        if (!(user.getName().isBlank() && user.getEmail().isBlank())) {
+        if (user.getName() != null && !user.getName().isBlank() && user.getEmail() != null &&
+                !user.getEmail().isBlank()) {
             user1.setName(user.getName());
             user1.setEmail(user.getEmail());
         }
-        if (user.getName().isBlank() && !(user.getEmail().isBlank())) {
+        if ((user.getName() == null || user.getName().isBlank()) && user.getEmail() != null &&
+                !(user.getEmail().isBlank())) {
             user1.setEmail(user.getEmail());
         }
-        if (!(user.getName().isBlank()) && user.getEmail().isBlank()) {
+        if (user.getName() != null && !(user.getName().isBlank()) &&
+                (user.getEmail() == null || user.getEmail().isBlank())) {
             user1.setName(user.getName());
         }
         return user1;

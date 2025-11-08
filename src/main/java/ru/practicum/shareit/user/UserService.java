@@ -25,22 +25,24 @@ public class UserService {
     }
 
     public UserDto addUser(UserDto userDto) {
-        List<User> users = userStorage.getAllUsers().stream()
-                .filter(user -> user.getEmail().equals(userDto.getEmail()))
-                .collect(Collectors.toList());
-        if (!users.isEmpty()) {
+        if (isSameEmail(userDto)) {
             log.error("Попытка добавить пользователя с уже существующим email");
             throw new SameEmailException("Уже есть пользователь с таким адресом электронной почты");
         }
-        userStorage.addUser(userMapper.toUser(userDto));
+        User newUser = userStorage.addUser(userMapper.toUser(userDto));
         log.info("");
-        return userDto;
+        return userMapper.toUserDto(newUser);
     }
 
     public UserDto updateUser(UserDto userDto, int userId) {
+        if (isSameEmail(userDto)) {
+            log.error("Попытка добавить пользователя с уже существующим email");
+            throw new SameEmailException("Уже есть пользователь с таким адресом электронной почты");
+        }
         if (userStorage.getUserOnId(userId).isPresent()) {
             User user = userStorage.updateUser(userMapper.toUser(userDto), userId);
             log.info("Пользователь был обновлён");
+            return userMapper.toUserDto(user);
         }
         log.error("Попытка обновить несуществующего пользователя");
         throw new NotFoundException("Пользователь не был найден");
@@ -50,8 +52,16 @@ public class UserService {
         if (userStorage.getUserOnId(userId).isPresent()) {
             userStorage.deleteUser(userId);
             log.info("Пользователь был удалён");
+            return;
         }
         log.error("Попытка удалить несуществующего пользователя");
         throw new NotFoundException("Пользователь не был найден");
+    }
+
+    private boolean isSameEmail(UserDto userDto) {
+        List<User> users = userStorage.getAllUsers().stream()
+                .filter(user -> user.getEmail().equals(userDto.getEmail()))
+                .collect(Collectors.toList());
+        return !users.isEmpty();
     }
 }

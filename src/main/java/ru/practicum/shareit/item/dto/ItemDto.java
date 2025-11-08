@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -14,6 +15,7 @@ public class ItemDto {
     @NotBlank
     private String description;
     private Integer owner;
+    @NotNull
     private Boolean available;
 
 }

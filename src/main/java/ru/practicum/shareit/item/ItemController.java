@@ -22,22 +22,22 @@ public class ItemController {
     private final ItemService itemService;
 
     @GetMapping("/{itemId}")
-    public ItemDto getItem(@PathVariable("itemId")  @Positive  @NotNull  Integer id,
-                           @RequestHeader("X-Sharer-User-Id")  @Positive @NotNull Integer userId) {
+    public ItemDto getItem(@PathVariable("itemId") @Positive @NotNull Integer id,
+                           @RequestHeader("X-Sharer-User-Id") @Positive @NotNull Integer userId) {
         return itemService.getItem(id, userId);
     }
 
     @PostMapping
-    public void addItem(@RequestBody @NotNull @Valid ItemDto itemDto,
-                        @RequestHeader("X-Sharer-User-Id") @NotNull @Positive Integer id) {
-        itemService.addItem(itemDto, id);
+    public ItemDto addItem(@RequestBody @NotNull @Valid ItemDto itemDto,
+                           @RequestHeader("X-Sharer-User-Id") @NotNull @Positive Integer id) {
+        return itemService.addItem(itemDto, id);
     }
 
-    @PatchMapping
-    public void updateItem(@RequestBody @NotNull ItemDto itemDto,
-                           @RequestHeader("X-Sharer-User-Id") @NotNull @Positive Integer userId,
-                           @PathVariable("itemId") @NotNull @Positive Integer id) {
-        itemService.updateItem(itemDto, id, userId);
+    @PatchMapping("{itemId}")
+    public ItemDto updateItem(@RequestBody @NotNull ItemDto itemDto,
+                              @RequestHeader("X-Sharer-User-Id") @NotNull @Positive Integer userId,
+                              @PathVariable("itemId") @NotNull @Positive Integer id) {
+        return itemService.updateItem(itemDto, id, userId);
     }
 
     @GetMapping
