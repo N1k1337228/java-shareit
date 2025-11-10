@@ -19,7 +19,7 @@ public class UserService {
 
     public UserDto getUser(int userId) {
         User user = userStorage.getUserOnId(userId)
-                .orElseThrow(() -> new NotFoundException("Запрашиваемый пользователь не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
         log.info("");
         return userMapper.toUserDto(user);
     }
@@ -30,7 +30,7 @@ public class UserService {
             throw new SameEmailException("Уже есть пользователь с таким адресом электронной почты");
         }
         User newUser = userStorage.addUser(userMapper.toUser(userDto));
-        log.info("");
+        log.info("Пользователь с id {} был добавлен", newUser.getId());
         return userMapper.toUserDto(newUser);
     }
 
@@ -41,21 +41,21 @@ public class UserService {
         }
         if (userStorage.getUserOnId(userId).isPresent()) {
             User user = userStorage.updateUser(userMapper.toUser(userDto), userId);
-            log.info("Пользователь был обновлён");
+            log.info("Пользователь с id {} был обновлён", userId);
             return userMapper.toUserDto(user);
         }
         log.error("Попытка обновить несуществующего пользователя");
-        throw new NotFoundException("Пользователь не был найден");
+        throw new NotFoundException("Пользователь с id " + userId + " не найден");
     }
 
     public void deleteUser(int userId) {
         if (userStorage.getUserOnId(userId).isPresent()) {
             userStorage.deleteUser(userId);
-            log.info("Пользователь был удалён");
+            log.info("Пользователь с id {} был удалён", userId);
             return;
         }
         log.error("Попытка удалить несуществующего пользователя");
-        throw new NotFoundException("Пользователь не был найден");
+        throw new NotFoundException("Пользователь с id " + userId + " не найден");
     }
 
     private boolean isSameEmail(UserDto userDto) {

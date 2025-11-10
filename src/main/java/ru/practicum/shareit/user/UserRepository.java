@@ -13,11 +13,7 @@ public class UserRepository implements UserStorage {
     private Integer idCount = 0;
 
     public Optional<User> getUserOnId(int id) {
-        User user = userRepository.get(id);
-        if (user != null) {
-            return Optional.of(user);
-        }
-        return Optional.empty();
+        return Optional.ofNullable(userRepository.get(id));
     }
 
     public List<User> getAllUsers() {
@@ -32,21 +28,21 @@ public class UserRepository implements UserStorage {
     }
 
     public User updateUser(User user, int userId) {
-        User user1 = userRepository.get(userId);
+        User updateUser = userRepository.get(userId);
         if (user.getName() != null && !user.getName().isBlank() && user.getEmail() != null &&
                 !user.getEmail().isBlank()) {
-            user1.setName(user.getName());
-            user1.setEmail(user.getEmail());
+            updateUser.setName(user.getName());
+            updateUser.setEmail(user.getEmail());
         }
         if ((user.getName() == null || user.getName().isBlank()) && user.getEmail() != null &&
                 !(user.getEmail().isBlank())) {
-            user1.setEmail(user.getEmail());
+            updateUser.setEmail(user.getEmail());
         }
         if (user.getName() != null && !(user.getName().isBlank()) &&
                 (user.getEmail() == null || user.getEmail().isBlank())) {
-            user1.setName(user.getName());
+            updateUser.setName(user.getName());
         }
-        return user1;
+        return updateUser;
     }
 
     public void deleteUser(int userId) {

@@ -17,14 +17,10 @@ import java.util.stream.Collectors;
 public class ItemRepository implements ItemStorage {
     private final ItemMapper itemMapper;
     private final HashMap<Integer, Item> itemStorage = new HashMap<>();
-    public Integer idCount = 0;
+    private Integer idCount = 0;
 
     public Optional<Item> getItem(int itemId) {
-        Item item = itemStorage.get(itemId);
-        if (item == null) {
-            return Optional.empty();
-        }
-        return Optional.of(item);
+        return Optional.ofNullable(itemStorage.get(itemId));
     }
 
     public Item addItem(ItemDto itemDto, int userId) {
@@ -36,22 +32,30 @@ public class ItemRepository implements ItemStorage {
     }
 
     public Item updateItem(Item item, int itemId) {
-        Item item1 = itemStorage.get(itemId);
-        if (item.getName() != null && item.getDescription() != null && item.getAvailable() != null) {
-            item1.setName(item.getName());
-            item1.setDescription(item.getDescription());
-            item1.setAvailable(item.getAvailable());
+        Item updateItem = itemStorage.get(itemId);
+        if ((item.getName() != null && !item.getName().isBlank())
+                && (item.getDescription() != null && !item.getDescription().isBlank())
+                && item.getAvailable() != null) {
+            updateItem.setName(item.getName());
+            updateItem.setDescription(item.getDescription());
+            updateItem.setAvailable(item.getAvailable());
         }
-        if (item.getName() != null && item.getDescription() == null && item.getAvailable() == null) {
-            item1.setName(item.getName());
+        if ((item.getName() != null && !item.getName().isBlank())
+                && (item.getDescription() == null || item.getDescription().isBlank())
+                && item.getAvailable() == null) {
+            updateItem.setName(item.getName());
         }
-        if (item.getName() == null && item.getDescription() != null && item.getAvailable() == null) {
-            item1.setDescription(item.getDescription());
+        if ((item.getName() == null || item.getName().isBlank())
+                && (item.getDescription() != null && !item.getDescription().isBlank())
+                && item.getAvailable() == null) {
+            updateItem.setDescription(item.getDescription());
         }
-        if (item.getName() == null && item.getDescription() == null && item.getAvailable() != null) {
-            item1.setAvailable(item.getAvailable());
+        if ((item.getName() == null || item.getName().isBlank())
+                && (item.getDescription() == null || item.getDescription().isBlank())
+                && item.getAvailable() != null) {
+            updateItem.setAvailable(item.getAvailable());
         }
-        return item1;
+        return updateItem;
     }
 
     public void deleteItem(int id) {
@@ -70,6 +74,7 @@ public class ItemRepository implements ItemStorage {
         }
         String search = text.toLowerCase();
         return itemStorage.values().stream()
+                .filter(Item::getAvailable)
                 .filter(item -> item.getName().toLowerCase().contains(search) ||
                         item.getDescription().toLowerCase().contains(search))
                 .collect(Collectors.toList());

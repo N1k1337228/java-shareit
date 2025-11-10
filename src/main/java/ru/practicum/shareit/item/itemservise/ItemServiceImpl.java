@@ -24,7 +24,8 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto getItem(int itemId, int userId) {
         userRepository.getUserOnId(userId).orElseThrow(() ->
                 new NotFoundException("Незарегистрированный пользователь не может запрашивать вещи"));
-        Item item = itemRepository.getItem(itemId).orElseThrow(() -> new NotFoundException(""));
+        Item item = itemRepository.getItem(itemId).orElseThrow(() -> new NotFoundException("Пользователь с id "
+                + userId + " не найден"));
         return itemMapper.toItemDto(item);
     }
 
@@ -37,7 +38,8 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto updateItem(ItemDto itemDto, int itemId, int userId) {
         userRepository.getUserOnId(userId).orElseThrow(() ->
                 new NotFoundException("Незарегистрированный пользователь не может обновлять вещи"));
-        itemRepository.getItem(itemId).orElseThrow(() -> new NotFoundException(""));
+        itemRepository.getItem(itemId).orElseThrow(() -> new NotFoundException("Вещь с id "
+                + itemId + "не найдена"));
         Item item = itemMapper.fromItemDto(itemDto);
         return itemMapper.toItemDto(itemRepository.updateItem(item, itemId));
     }
@@ -52,7 +54,6 @@ public class ItemServiceImpl implements ItemService {
 
     public List<ItemDto> searchItem(String text) {
         return itemRepository.searchItem(text).stream()
-                .filter(Item::getAvailable)
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
     }

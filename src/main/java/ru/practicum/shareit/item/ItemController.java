@@ -29,7 +29,7 @@ public class ItemController {
 
     @PostMapping
     public ItemDto addItem(@RequestBody @NotNull @Valid ItemDto itemDto,
-                           @RequestHeader("X-Sharer-User-Id") @NotNull @Positive Integer id) {
+                           @RequestHeader("X-Sharer-User-Id") @Positive Integer id) {
         return itemService.addItem(itemDto, id);
     }
 
