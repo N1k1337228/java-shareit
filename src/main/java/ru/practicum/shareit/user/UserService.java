@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.exception.model.SameEmailException;
 
 import java.util.List;
@@ -39,13 +40,21 @@ public class UserService {
             log.error("Попытка добавить пользователя с уже существующим email");
             throw new SameEmailException("Уже есть пользователь с таким адресом электронной почты");
         }
-        if (userStorage.getUserOnId(userId).isPresent()) {
-            User user = userStorage.updateUser(userMapper.toUser(userDto), userId);
-            log.info("Пользователь с id {} был обновлён", userId);
-            return userMapper.toUserDto(user);
+        User user = userStorage.getUserOnId(userId).orElseThrow(() ->
+                new NotFoundException("Пользователь с id " + userId + " не найден"));
+        if (!user.getId().equals(userId)) {
+            log.error("Попытка обновления данных одного пользователя другим пользователем с id {}", userId);
+            throw new ValidationException("Обновлять данные пользователя может только сам пользователь");
         }
-        log.error("Попытка обновить несуществующего пользователя");
-        throw new NotFoundException("Пользователь с id " + userId + " не найден");
+        if (userDto.getEmail() != null) {
+            user.setEmail(userDto.getEmail());
+        }
+        if (userDto.getName() != null) {
+            user.setName(userDto.getName());
+        }
+        User updatedUser = userStorage.updateUser(user, userId);
+        log.info("Пользователь с id {} был обновлён", userId);
+        return userMapper.toUserDto(updatedUser);
     }
 
     public void deleteUser(int userId) {

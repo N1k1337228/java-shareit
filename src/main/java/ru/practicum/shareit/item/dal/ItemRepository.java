@@ -32,30 +32,8 @@ public class ItemRepository implements ItemStorage {
     }
 
     public Item updateItem(Item item, int itemId) {
-        Item updateItem = itemStorage.get(itemId);
-        if ((item.getName() != null && !item.getName().isBlank())
-                && (item.getDescription() != null && !item.getDescription().isBlank())
-                && item.getAvailable() != null) {
-            updateItem.setName(item.getName());
-            updateItem.setDescription(item.getDescription());
-            updateItem.setAvailable(item.getAvailable());
-        }
-        if ((item.getName() != null && !item.getName().isBlank())
-                && (item.getDescription() == null || item.getDescription().isBlank())
-                && item.getAvailable() == null) {
-            updateItem.setName(item.getName());
-        }
-        if ((item.getName() == null || item.getName().isBlank())
-                && (item.getDescription() != null && !item.getDescription().isBlank())
-                && item.getAvailable() == null) {
-            updateItem.setDescription(item.getDescription());
-        }
-        if ((item.getName() == null || item.getName().isBlank())
-                && (item.getDescription() == null || item.getDescription().isBlank())
-                && item.getAvailable() != null) {
-            updateItem.setAvailable(item.getAvailable());
-        }
-        return updateItem;
+        itemStorage.put(itemId, item);
+        return item;
     }
 
     public void deleteItem(int id) {

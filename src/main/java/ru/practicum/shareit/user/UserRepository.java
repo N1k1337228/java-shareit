@@ -29,19 +29,7 @@ public class UserRepository implements UserStorage {
 
     public User updateUser(User user, int userId) {
         User updateUser = userRepository.get(userId);
-        if (user.getName() != null && !user.getName().isBlank() && user.getEmail() != null &&
-                !user.getEmail().isBlank()) {
-            updateUser.setName(user.getName());
-            updateUser.setEmail(user.getEmail());
-        }
-        if ((user.getName() == null || user.getName().isBlank()) && user.getEmail() != null &&
-                !(user.getEmail().isBlank())) {
-            updateUser.setEmail(user.getEmail());
-        }
-        if (user.getName() != null && !(user.getName().isBlank()) &&
-                (user.getEmail() == null || user.getEmail().isBlank())) {
-            updateUser.setName(user.getName());
-        }
+        userRepository.put(userId, user);
         return updateUser;
     }
 
