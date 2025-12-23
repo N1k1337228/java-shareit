@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class UserRepository implements UserStorage {
+public class UserRepositoryImpl implements UserStorage {
     private final HashMap<Integer, User> userRepository = new HashMap<>();
     private Integer idCount = 0;
 
