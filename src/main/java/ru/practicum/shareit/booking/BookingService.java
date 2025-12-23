@@ -112,21 +112,21 @@ public class BookingService {
         }
         switch (state) {
             case "ALL":
-                return bookingMapper.BookingListToBookingDtoList(bookingRepository.getAllBookingOnOwnerId(ownerId));
+                return bookingMapper.bookingListToBookingDtoList(bookingRepository.getAllBookingOnOwnerId(ownerId));
             case "CURRENT":
-                return bookingMapper.BookingListToBookingDtoList(bookingRepository
+                return bookingMapper.bookingListToBookingDtoList(bookingRepository
                         .getAllCurrentBookingOnOwnerId(ownerId, LocalDate.now()));
             case "PAST":
-                return bookingMapper.BookingListToBookingDtoList(bookingRepository
+                return bookingMapper.bookingListToBookingDtoList(bookingRepository
                         .getAllPastBookingOnOwnerId(ownerId, LocalDate.now()));
             case "FUTURE":
-                return bookingMapper.BookingListToBookingDtoList(bookingRepository
+                return bookingMapper.bookingListToBookingDtoList(bookingRepository
                         .getAllFutureBookingOnOwnerId(ownerId, LocalDate.now()));
             case "WAITING":
-                return bookingMapper.BookingListToBookingDtoList(bookingRepository
+                return bookingMapper.bookingListToBookingDtoList(bookingRepository
                         .getAllBookingOnOwnerIdAndState(ownerId, "WAITING"));
             case "REJECTED":
-                return bookingMapper.BookingListToBookingDtoList(bookingRepository
+                return bookingMapper.bookingListToBookingDtoList(bookingRepository
                         .getAllBookingOnOwnerIdAndState(ownerId, "REJECTED"));
             default:
                 log.error("Переданный state не соответствует допустимым значениям: " +

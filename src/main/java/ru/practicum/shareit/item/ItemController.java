@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +25,8 @@ public class ItemController {
 
     @PostMapping("{itemId}/comment")
     public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") @Positive @NotNull Integer userId,
-                           @RequestBody @Valid CommentDto commentDto, @PathVariable @Positive @NotNull Integer itemId) {
-        return itemService.addComment(itemId,userId,commentDto);
+                                 @RequestBody @Valid CommentDto commentDto, @PathVariable @Positive @NotNull Integer itemId) {
+        return itemService.addComment(itemId, userId, commentDto);
     }
 
     @PostMapping
@@ -50,7 +49,7 @@ public class ItemController {
 
     @GetMapping("/{itemId}")
     public ItemWithBookingsDto getItem(@PathVariable("itemId") @Positive @NotNull Integer id,
-                           @RequestHeader("X-Sharer-User-Id") @Positive @NotNull Integer userId) {
+                                       @RequestHeader("X-Sharer-User-Id") @Positive @NotNull Integer userId) {
         return itemService.getItem(id, userId);
     }
 
@@ -59,6 +58,4 @@ public class ItemController {
         return itemService.searchItem(requestText);
 
     }
-
-
 }

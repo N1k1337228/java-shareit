@@ -37,7 +37,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     @Query(value = "SELECT b FROM Booking AS b WHERE b.item.owner.id = ?1 AND b.state < ?2")
     List<Booking> getAllBookingOnOwnerIdAndState(int ownerId, String state);
-    
+
     boolean existsByBookerIdAndItemId(int bookerId, int itemId);
 
     @Query("SELECT b FROM Booking b WHERE b.item.id IN :itemIds AND b.startBooking > :now AND b.state = 'APPROVED' ORDER BY b.startBooking ASC")

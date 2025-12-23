@@ -31,7 +31,7 @@ public class BookingMapper {
         return bookingDto;
     }
 
-    public List<BookingDto> BookingListToBookingDtoList(List<Booking> bookingsList) {
+    public List<BookingDto> bookingListToBookingDtoList(List<Booking> bookingsList) {
         return bookingsList.stream()
                 .map(this::toBookingDto)
                 .toList();
