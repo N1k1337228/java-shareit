@@ -49,17 +49,16 @@ public class BookingService {
         return bookingMapper.toResponseBookingDto(booking, itemMapper.toItemDto(item), userMapper.toUserDto(user));
     }
 
-    public ResponseBookingDto confirmationOfRequest(int bookingId, String approved, int ownerId) {
+    public ResponseBookingDto confirmationOfRequest(int bookingId, Boolean approved, int ownerId) {
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
         Item item = itemRepository.findById(booking.getItem().getId()).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
-        if (!booking.getState().toString().equals(BookingStatus.WAITING.toString())) {
+        if (!booking.getState().equals(BookingStatus.WAITING)) {
             log.error("Попытка принять или отклонить бронирование, которые уже не находятся в статусе WAITING");
             throw new ValidationException("Принимать или отклонять бронирование можно " +
                     "только если запрос не была до этого принят или отклонён");
         }
         if (item.getOwner().getId().equals(ownerId)) {
-            boolean isApproved = Boolean.parseBoolean(approved);
-            if (isApproved) {
+            if (approved) {
                 booking.setState(BookingStatus.APPROVED);
             } else {
                 booking.setState(BookingStatus.REJECTED);

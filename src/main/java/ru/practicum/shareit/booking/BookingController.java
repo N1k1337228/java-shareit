@@ -25,7 +25,7 @@ public class BookingController {
 
     @PatchMapping("/{bookingId}")
     public ResponseBookingDto confirmationOfRequest(@RequestHeader("X-Sharer-User-Id") Integer userId,
-                                                    @PathVariable @NonNull Integer bookingId, @RequestParam("approved") String approved) {
+                                                    @PathVariable @NonNull Integer bookingId, @RequestParam("approved") Boolean approved) {
         return bookingService.confirmationOfRequest(bookingId, approved, userId);
     }
 

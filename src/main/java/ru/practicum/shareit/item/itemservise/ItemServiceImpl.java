@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dal.CommentRepository;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -38,7 +40,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь с id " + itemId + " не найдена"));
 
-        ItemWithBookingsDto dto = createItemDto(item);
+        ItemWithBookingsDto dto = itemMapper.createItemDto(item);
 
         boolean isOwner = item.getOwner().getId().equals(userId);
         if (!isOwner) {
@@ -48,12 +50,10 @@ public class ItemServiceImpl implements ItemService {
         }
 
         List<Integer> itemIds = List.of(itemId);
-        Map<Integer, Booking>[] bookingMaps = getBookingMaps(itemIds);
-        Map<Integer, Booking> lastBookingsMap = bookingMaps[0];
-        Map<Integer, Booking> nextBookingsMap = bookingMaps[1];
+        LastAndNextBookings bookings = getBookingTimeframesForItems(itemIds);
 
-        fillBookingDates(dto, nextBookingsMap, lastBookingsMap, item.getId(),
-                userId, item.getOwner().getId());
+        fillBookingDates(dto, bookings.getNextBookings(), bookings.getLastBookings(),
+                item.getId(), userId, item.getOwner().getId());
         return dto;
     }
 
@@ -96,15 +96,13 @@ public class ItemServiceImpl implements ItemService {
                 .map(Item::getId)
                 .collect(Collectors.toList());
 
-        Map<Integer, Booking>[] bookingMaps = getBookingMaps(itemIds);
-        Map<Integer, Booking> lastBookingsMap = bookingMaps[0];
-        Map<Integer, Booking> nextBookingsMap = bookingMaps[1];
+        LastAndNextBookings bookings = getBookingTimeframesForItems(itemIds);
 
         List<ItemWithBookingsDto> result = new ArrayList<>();
         for (Item item : items) {
-            ItemWithBookingsDto dto = createItemDto(item);
-            fillBookingDates(dto, nextBookingsMap, lastBookingsMap, item.getId(),
-                    ownerId, item.getOwner().getId());
+            ItemWithBookingsDto dto = itemMapper.createItemDto(item);
+            fillBookingDates(dto, bookings.getNextBookings(), bookings.getLastBookings(),
+                    item.getId(), ownerId, item.getOwner().getId());
             result.add(dto);
         }
         return result;
@@ -181,44 +179,32 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private ItemWithBookingsDto createItemDto(Item item) {
-        ItemWithBookingsDto dto = new ItemWithBookingsDto();
-        dto.setId(item.getId());
-        dto.setName(item.getName());
-        dto.setDescription(item.getDescription());
-        dto.setAvailable(item.getAvailable());
-        dto.setOwner(item.getOwner().getId());
-        dto.setComments(CommentMapper.toCommentDtoList(item.getComment()));
-        return dto;
-    }
 
-    private Map<Integer, Booking>[] getBookingMaps(List<Integer> itemIds) {
+    private LastAndNextBookings getBookingTimeframesForItems(List<Integer> itemIds) {
         LocalDateTime now = LocalDateTime.now();
 
         Map<Integer, Booking> lastBookingsMap = bookingRepository
                 .findLastBookingsForItems(itemIds, now)
                 .stream()
+                .filter(booking -> BookingStatus.APPROVED.equals(booking.getState()))
                 .collect(Collectors.toMap(
                         booking -> booking.getItem().getId(),
-                        booking -> booking,
-                        (first, second) -> {
-                            return first.getEndBooking().isAfter(second.getEndBooking())
-                                    ? first : second;
-                        }
+                        Function.identity(),
+                        (first, second) -> first.getEndBooking().isAfter(second.getEndBooking())
+                                ? first : second
                 ));
 
         Map<Integer, Booking> nextBookingsMap = bookingRepository
                 .findNextBookingsForItems(itemIds, now)
                 .stream()
+                .filter(booking -> BookingStatus.APPROVED.equals(booking.getState()))
                 .collect(Collectors.toMap(
                         booking -> booking.getItem().getId(),
-                        booking -> booking,
-                        (first, second) -> {
-                            return first.getStartBooking().isBefore(second.getStartBooking())
-                                    ? first : second;
-                        }
+                        Function.identity(),
+                        (first, second) -> first.getStartBooking().isBefore(second.getStartBooking())
+                                ? first : second
                 ));
 
-        return new Map[]{lastBookingsMap, nextBookingsMap};
+        return new LastAndNextBookings(lastBookingsMap, nextBookingsMap);
     }
 }
