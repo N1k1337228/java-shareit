@@ -18,34 +18,34 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    public ResponseBookingDto addBooking(@RequestHeader("X-Sharer-User-Id") @NonNull Integer userId,
+    public ResponseBookingDto addBooking(@RequestHeader("X-Sharer-User-Id") Integer userId,
                                          @RequestBody BookingDto bookingDto) {
         return bookingService.addBooking(bookingDto, userId);
     }
 
     @PatchMapping("/{bookingId}")
-    public ResponseBookingDto confirmationOfRequest(@RequestHeader("X-Sharer-User-Id") @NonNull Integer userId,
-                                                    @PathVariable @NonNull Integer bookingId, @RequestParam("approved") String status) {
-        return bookingService.confirmationOfRequest(bookingId, status, userId);
+    public ResponseBookingDto confirmationOfRequest(@RequestHeader("X-Sharer-User-Id") Integer userId,
+                                                    @PathVariable @NonNull Integer bookingId, @RequestParam("approved") String approved) {
+        return bookingService.confirmationOfRequest(bookingId, approved, userId);
     }
 
     @GetMapping("/{bookingId}")
-    public ResponseBookingDto getBooking(@RequestHeader("X-Sharer-User-Id") @NonNull Integer userId,
+    public ResponseBookingDto getBooking(@RequestHeader("X-Sharer-User-Id") Integer userId,
                                          @PathVariable Integer bookingId) {
         return bookingService.getBookingOnId(userId, bookingId);
     }
 
     @GetMapping
-    public List<ResponseBookingDto> getBookingOnState(@RequestHeader("X-Sharer-User-Id") @NonNull Integer userId,
+    public List<ResponseBookingDto> getBookingOnState(@RequestHeader("X-Sharer-User-Id") Integer userId,
                                                       @RequestParam(value = "state",
-                                                              required = false, defaultValue = "ALL") String state) {
+                                                              required = false, defaultValue = "ALL") BookingSort state) {
         return bookingService.getBookingOnState(userId, state);
     }
 
     @GetMapping("/owner")
-    public List<BookingDto> getBookingOfCurrentUser(@RequestHeader("X-Sharer-User-Id") @NonNull Integer userId,
-                                                    @RequestParam(value = "state", required = false,
-                                                            defaultValue = "ALL") String state) {
+    public List<ResponseBookingDto> getBookingOfCurrentUser(@RequestHeader("X-Sharer-User-Id") Integer userId,
+                                                            @RequestParam(value = "state", required = false,
+                                                                    defaultValue = "ALL") BookingSort state) {
         return bookingService.getBookingOnStateAndOwnerId(userId, state);
     }
 }

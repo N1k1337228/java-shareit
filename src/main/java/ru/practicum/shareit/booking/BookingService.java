@@ -13,7 +13,7 @@ import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
-import ru.practicum.shareit.user.UserReposirory;
+import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.List;
 @Slf4j
 public class BookingService {
     private final BookingRepository bookingRepository;
-    private final UserReposirory userReposirory;
+    private final UserRepository userReposirory;
     private final ItemRepository itemRepository;
     private final BookingMapper bookingMapper;
     private final ItemMapper itemMapper;
@@ -36,26 +36,33 @@ public class BookingService {
         User user = userReposirory.findById(bookerId).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         Item item = itemRepository.findById(bookingDto.getItemId()).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
         if (!item.getAvailable()) {
-            log.error("");
+            log.error("Попытка забронировать вещь, которая уже забронирована");
             throw new ValidationException("Нельзя забронировать вещь, которая уже забронирована");
         }
+        if (item.getOwner().getId() == bookerId) {
+            log.error("Владелец попытался забронировать свою вещь");
+            throw new ValidationException("Владелец не может бронировать свои вещи");
+        }
         Booking booking = bookingMapper.toBooking(bookingDto, item, user);
-        booking.setState(BookingStatus.WAITING.toString());
+        booking.setState(BookingStatus.WAITING);
         booking = bookingRepository.save(booking);
         return bookingMapper.toResponseBookingDto(booking, itemMapper.toItemDto(item), userMapper.toUserDto(user));
     }
 
     public ResponseBookingDto confirmationOfRequest(int bookingId, String approved, int ownerId) {
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new NotFoundException(""));
-        Item item = itemRepository.findById(booking.getItem().getId()).orElseThrow(() -> new NotFoundException(""));
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
+        Item item = itemRepository.findById(booking.getItem().getId()).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
+        if (!booking.getState().toString().equals(BookingStatus.WAITING.toString())) {
+            log.error("Попытка принять или отклонить бронирование, которые уже не находятся в статусе WAITING");
+            throw new ValidationException("Принимать или отклонять бронирование можно " +
+                    "только если запрос не была до этого принят или отклонён");
+        }
         if (item.getOwner().getId().equals(ownerId)) {
-            switch (approved) {
-                case "true":
-                    booking.setState(BookingStatus.APPROVED.toString());
-                    break;
-                case "false":
-                    booking.setState(BookingStatus.REJECTED.toString());
-                    break;
+            boolean isApproved = Boolean.parseBoolean(approved);
+            if (isApproved) {
+                booking.setState(BookingStatus.APPROVED);
+            } else {
+                booking.setState(BookingStatus.REJECTED);
             }
             bookingRepository.save(booking);
             return bookingMapper.toResponseBookingDto(booking, itemMapper.toItemDto(item), userMapper.toUserDto(booking.getBooker()));
@@ -69,32 +76,32 @@ public class BookingService {
         Integer bookerId = booking.getBooker().getId();
         Integer ownerId = booking.getItem().getOwner().getId();
         if (!(userId.equals(bookerId) || userId.equals(ownerId))) {
-            log.error("");
+            log.error("Попытка запросить данные о бронировании пользователем, не являющимся арендатором/владельцем");
             throw new ValidationException("Запрашивать данные о бронировании может только " +
-                    "создатель хозяин забронированной вещи или пользователь забронировавший её");
+                    "хозяин забронированной вещи или пользователь забронировавший её");
         }
-        log.info("");
+        log.info("Запросили бронирование");
         return bookingMapper.toResponseBookingDto(booking, itemMapper.toItemDto(booking.getItem()), userMapper.toUserDto(user));
     }
 
-    public List<ResponseBookingDto> getBookingOnState(int bookerId, String state) {
+    public List<ResponseBookingDto> getBookingOnState(int bookerId, BookingSort state) {
         User booker = userReposirory.findById(bookerId).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-        switch (state.toUpperCase()) {
-            case "ALL":
+        switch (state) {
+            case BookingSort.ALL:
                 return bookingMapper.toResponseBookingDtoList(bookingRepository.findByBookerId(bookerId));
-            case "CURRENT":
+            case BookingSort.CURRENT:
                 return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .getAllCurrentBookingOnBookerId(bookerId, LocalDate.now()));
-            case "PAST":
+            case BookingSort.PAST:
                 return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .findAllByBookerIdAndEndBookingBefore(bookerId, LocalDate.now()));
-            case "FUTURE":
+            case BookingSort.FUTURE:
                 return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .findAllByBookerIdAndStartBookingAfter(bookerId, LocalDate.now()));
-            case "WAITING":
+            case BookingSort.WAITING:
                 return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .findAllByBookerIdAndState(bookerId, "WAITING"));
-            case "REJECTED":
+            case BookingSort.REJECTED:
                 return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .findAllByBookerIdAndState(bookerId, "REJECTED"));
             default:
@@ -105,28 +112,25 @@ public class BookingService {
         }
     }
 
-    public List<BookingDto> getBookingOnStateAndOwnerId(int ownerId, String state) {
+    public List<ResponseBookingDto> getBookingOnStateAndOwnerId(int ownerId, BookingSort state) {
         User owner = userReposirory.findById(ownerId).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-        if (itemRepository.getCountOfOwnersItems(ownerId) < 1) {
-            throw new ValidationException("У пользователя ещё не загрузил вещи");
-        }
         switch (state) {
-            case "ALL":
-                return bookingMapper.bookingListToBookingDtoList(bookingRepository.getAllBookingOnOwnerId(ownerId));
-            case "CURRENT":
-                return bookingMapper.bookingListToBookingDtoList(bookingRepository
+            case BookingSort.ALL:
+                return bookingMapper.toResponseBookingDtoList(bookingRepository.getAllBookingOnOwnerId(ownerId));
+            case BookingSort.CURRENT:
+                return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .getAllCurrentBookingOnOwnerId(ownerId, LocalDate.now()));
-            case "PAST":
-                return bookingMapper.bookingListToBookingDtoList(bookingRepository
+            case BookingSort.PAST:
+                return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .getAllPastBookingOnOwnerId(ownerId, LocalDate.now()));
-            case "FUTURE":
-                return bookingMapper.bookingListToBookingDtoList(bookingRepository
+            case BookingSort.FUTURE:
+                return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .getAllFutureBookingOnOwnerId(ownerId, LocalDate.now()));
-            case "WAITING":
-                return bookingMapper.bookingListToBookingDtoList(bookingRepository
+            case BookingSort.WAITING:
+                return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .getAllBookingOnOwnerIdAndState(ownerId, "WAITING"));
-            case "REJECTED":
-                return bookingMapper.bookingListToBookingDtoList(bookingRepository
+            case BookingSort.REJECTED:
+                return bookingMapper.toResponseBookingDtoList(bookingRepository
                         .getAllBookingOnOwnerIdAndState(ownerId, "REJECTED"));
             default:
                 log.error("Переданный state не соответствует допустимым значениям: " +

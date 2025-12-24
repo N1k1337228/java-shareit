@@ -27,6 +27,7 @@ public class Booking {
     private LocalDateTime startBooking;
     @Column(name = "end_booking")
     private LocalDateTime endBooking;
-    @Column(name = "state")
-    private String state;
+    @Enumerated(EnumType.STRING)  // Сохранится как "WAITING", "APPROVED"...
+    @Column(name = "state", length = 20)
+    private BookingStatus state;
 }

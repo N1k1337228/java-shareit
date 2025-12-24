@@ -13,7 +13,7 @@ import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserReposirory;
+import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
-    private final UserReposirory userRepository;
+    private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private final ItemMapper itemMapper;
@@ -37,50 +37,21 @@ public class ItemServiceImpl implements ItemService {
 
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь с id " + itemId + " не найдена"));
+
+        ItemWithBookingsDto dto = createItemDto(item);
+
         boolean isOwner = item.getOwner().getId().equals(userId);
         if (!isOwner) {
-            ItemWithBookingsDto dto = new ItemWithBookingsDto();
-            dto.setId(item.getId());
-            dto.setName(item.getName());
-            dto.setDescription(item.getDescription());
-            dto.setAvailable(item.getAvailable());
-            dto.setOwner(item.getOwner().getId());
-            dto.setComments(CommentMapper.toCommentDtoList(item.getComment()));
             dto.setLastBooking(null);
             dto.setNextBooking(null);
             return dto;
         }
+
         List<Integer> itemIds = List.of(itemId);
-        LocalDateTime now = LocalDateTime.now();
-        Map<Integer, Booking> lastBookingsMap = bookingRepository
-                .findLastBookingsForItems(itemIds, now)
-                .stream()
-                .collect(Collectors.toMap(
-                        booking -> booking.getItem().getId(),
-                        booking -> booking,
-                        (first, second) -> {
-                            return first.getEndBooking().isAfter(second.getEndBooking())
-                                    ? first : second;
-                        }
-                ));
-        Map<Integer, Booking> nextBookingsMap = bookingRepository
-                .findNextBookingsForItems(itemIds, now)
-                .stream()
-                .collect(Collectors.toMap(
-                        booking -> booking.getItem().getId(),
-                        booking -> booking,
-                        (first, second) -> {
-                            return first.getStartBooking().isBefore(second.getStartBooking())
-                                    ? first : second;
-                        }
-                ));
-        ItemWithBookingsDto dto = new ItemWithBookingsDto();
-        dto.setId(item.getId());
-        dto.setName(item.getName());
-        dto.setDescription(item.getDescription());
-        dto.setAvailable(item.getAvailable());
-        dto.setOwner(item.getOwner().getId());
-        dto.setComments(CommentMapper.toCommentDtoList(item.getComment()));
+        Map<Integer, Booking>[] bookingMaps = getBookingMaps(itemIds);
+        Map<Integer, Booking> lastBookingsMap = bookingMaps[0];
+        Map<Integer, Booking> nextBookingsMap = bookingMaps[1];
+
         fillBookingDates(dto, nextBookingsMap, lastBookingsMap, item.getId(),
                 userId, item.getOwner().getId());
         return dto;
@@ -120,41 +91,18 @@ public class ItemServiceImpl implements ItemService {
         if (items.isEmpty()) {
             return new ArrayList<>();
         }
+
         List<Integer> itemIds = items.stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
-        LocalDateTime now = LocalDateTime.now();
-        Map<Integer, Booking> lastBookingsMap = bookingRepository
-                .findLastBookingsForItems(itemIds, now)
-                .stream()
-                .collect(Collectors.toMap(
-                        booking -> booking.getItem().getId(),
-                        booking -> booking,
-                        (first, second) -> {
-                            return first.getEndBooking().isAfter(second.getEndBooking())
-                                    ? first : second;
-                        }
-                ));
-        Map<Integer, Booking> nextBookingsMap = bookingRepository
-                .findNextBookingsForItems(itemIds, now)
-                .stream()
-                .collect(Collectors.toMap(
-                        booking -> booking.getItem().getId(),
-                        booking -> booking,
-                        (first, second) -> {
-                            return first.getStartBooking().isBefore(second.getStartBooking())
-                                    ? first : second;
-                        }
-                ));
+
+        Map<Integer, Booking>[] bookingMaps = getBookingMaps(itemIds);
+        Map<Integer, Booking> lastBookingsMap = bookingMaps[0];
+        Map<Integer, Booking> nextBookingsMap = bookingMaps[1];
+
         List<ItemWithBookingsDto> result = new ArrayList<>();
         for (Item item : items) {
-            ItemWithBookingsDto dto = new ItemWithBookingsDto();
-            dto.setId(item.getId());
-            dto.setName(item.getName());
-            dto.setDescription(item.getDescription());
-            dto.setAvailable(item.getAvailable());
-            dto.setOwner(item.getOwner().getId());
-            dto.setComments(CommentMapper.toCommentDtoList(item.getComment()));
+            ItemWithBookingsDto dto = createItemDto(item);
             fillBookingDates(dto, nextBookingsMap, lastBookingsMap, item.getId(),
                     ownerId, item.getOwner().getId());
             result.add(dto);
@@ -185,7 +133,7 @@ public class ItemServiceImpl implements ItemService {
                 .filter(b -> b.getItem() != null && b.getItem().getId().equals(itemId))
                 .collect(Collectors.toList());
         List<Booking> approvedBookings = bookings.stream()
-                .filter(b -> "APPROVED".equals(b.getState()))
+                .filter(b -> "APPROVED".equals(b.getState().toString()))
                 .collect(Collectors.toList());
         if (approvedBookings.isEmpty()) {
             throw new ValidationException("Можно комментировать только подтверждённые аренды");
@@ -214,7 +162,7 @@ public class ItemServiceImpl implements ItemService {
         if (lastBookingsMap != null && lastBookingsMap.containsKey(itemId)) {
             Booking lastBooking = lastBookingsMap.get(itemId);
 
-            boolean isApproved = "APPROVED".equals(lastBooking.getState());
+            boolean isApproved = "APPROVED".equals(lastBooking.getState().toString());
             boolean isCompleted = lastBooking.getEndBooking().isBefore(LocalDateTime.now());
             boolean isForThisItem = lastBooking.getItem().getId().equals(itemId);
             if (isApproved && isCompleted && isForThisItem) {
@@ -223,7 +171,7 @@ public class ItemServiceImpl implements ItemService {
         }
         if (nextBookingsMap != null && nextBookingsMap.containsKey(itemId)) {
             Booking nextBooking = nextBookingsMap.get(itemId);
-            boolean isApproved = "APPROVED".equals(nextBooking.getState());
+            boolean isApproved = "APPROVED".equals(nextBooking.getState().toString());
             boolean isFuture = nextBooking.getStartBooking().isAfter(LocalDateTime.now());
             boolean isForThisItem = nextBooking.getItem().getId().equals(itemId);
 
@@ -231,5 +179,46 @@ public class ItemServiceImpl implements ItemService {
                 dto.setNextBooking(nextBooking.getStartBooking().toLocalDate());
             }
         }
+    }
+
+    private ItemWithBookingsDto createItemDto(Item item) {
+        ItemWithBookingsDto dto = new ItemWithBookingsDto();
+        dto.setId(item.getId());
+        dto.setName(item.getName());
+        dto.setDescription(item.getDescription());
+        dto.setAvailable(item.getAvailable());
+        dto.setOwner(item.getOwner().getId());
+        dto.setComments(CommentMapper.toCommentDtoList(item.getComment()));
+        return dto;
+    }
+
+    private Map<Integer, Booking>[] getBookingMaps(List<Integer> itemIds) {
+        LocalDateTime now = LocalDateTime.now();
+
+        Map<Integer, Booking> lastBookingsMap = bookingRepository
+                .findLastBookingsForItems(itemIds, now)
+                .stream()
+                .collect(Collectors.toMap(
+                        booking -> booking.getItem().getId(),
+                        booking -> booking,
+                        (first, second) -> {
+                            return first.getEndBooking().isAfter(second.getEndBooking())
+                                    ? first : second;
+                        }
+                ));
+
+        Map<Integer, Booking> nextBookingsMap = bookingRepository
+                .findNextBookingsForItems(itemIds, now)
+                .stream()
+                .collect(Collectors.toMap(
+                        booking -> booking.getItem().getId(),
+                        booking -> booking,
+                        (first, second) -> {
+                            return first.getStartBooking().isBefore(second.getStartBooking())
+                                    ? first : second;
+                        }
+                ));
+
+        return new Map[]{lastBookingsMap, nextBookingsMap};
     }
 }

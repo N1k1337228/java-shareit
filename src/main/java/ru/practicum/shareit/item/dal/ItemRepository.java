@@ -9,8 +9,6 @@ import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item,Integer> {
 
-    //Optional<Item> findByUserId(Integer id);
-
     List<Item> findByOwnerId(Integer id);
 
     @Query("SELECT i FROM Item i " +
@@ -21,5 +19,4 @@ public interface ItemRepository extends JpaRepository<Item,Integer> {
 
     @Query(value = "SELECT COUNT(i) FROM Item AS i WHERE i.owner.id = ?1")
     int getCountOfOwnersItems(int ownerId);
-
 }

@@ -44,7 +44,7 @@ public class BookingMapper {
         responseBookingDto.setItem(itemDto);
         responseBookingDto.setStart(booking.getStartBooking());
         responseBookingDto.setEnd(booking.getEndBooking());
-        responseBookingDto.setStatus(booking.getState());
+        responseBookingDto.setStatus(booking.getState().toString());
         return responseBookingDto;
     }
 
@@ -53,7 +53,7 @@ public class BookingMapper {
         dto.setId(booking.getId());
         dto.setStart(booking.getStartBooking());
         dto.setEnd(booking.getEndBooking());
-        dto.setStatus(booking.getState());
+        dto.setStatus(booking.getState().toString());
         UserDto userDto = new UserDto();
         userDto.setId(booking.getBooker().getId());
         userDto.setName(booking.getBooker().getName());

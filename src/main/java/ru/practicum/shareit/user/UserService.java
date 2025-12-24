@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
-    private final UserReposirory userStorage;
+    private final UserRepository userStorage;
     private final UserMapper userMapper;
 
     public UserDto getUser(int userId) {
