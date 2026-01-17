@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
-    private final UserStorage userStorage;
+    private final UserRepository userStorage;
     private final UserMapper userMapper;
 
     public UserDto getUser(int userId) {
-        User user = userStorage.getUserOnId(userId)
+        User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
         log.info("");
         return userMapper.toUserDto(user);
@@ -30,7 +30,7 @@ public class UserService {
             log.error("Попытка добавить пользователя с уже существующим email");
             throw new SameEmailException("Уже есть пользователь с таким адресом электронной почты");
         }
-        User newUser = userStorage.addUser(userMapper.toUser(userDto));
+        User newUser = userStorage.save(userMapper.toUser(userDto));
         log.info("Пользователь с id {} был добавлен", newUser.getId());
         return userMapper.toUserDto(newUser);
     }
@@ -40,7 +40,7 @@ public class UserService {
             log.error("Попытка добавить пользователя с уже существующим email");
             throw new SameEmailException("Уже есть пользователь с таким адресом электронной почты");
         }
-        User user = userStorage.getUserOnId(userId).orElseThrow(() ->
+        User user = userStorage.findById(userId).orElseThrow(() ->
                 new NotFoundException("Пользователь с id " + userId + " не найден"));
         if (!user.getId().equals(userId)) {
             log.error("Попытка обновления данных одного пользователя другим пользователем с id {}", userId);
@@ -52,14 +52,14 @@ public class UserService {
         if (userDto.getName() != null) {
             user.setName(userDto.getName());
         }
-        User updatedUser = userStorage.updateUser(user, userId);
+        User updatedUser = userStorage.save(user);
         log.info("Пользователь с id {} был обновлён", userId);
         return userMapper.toUserDto(updatedUser);
     }
 
     public void deleteUser(int userId) {
-        if (userStorage.getUserOnId(userId).isPresent()) {
-            userStorage.deleteUser(userId);
+        if (userStorage.findById(userId).isPresent()) {
+            userStorage.deleteById(userId);
             log.info("Пользователь с id {} был удалён", userId);
             return;
         }
@@ -68,7 +68,7 @@ public class UserService {
     }
 
     private boolean isSameEmail(UserDto userDto) {
-        List<User> users = userStorage.getAllUsers().stream()
+        List<User> users = userStorage.findAll().stream()
                 .filter(user -> user.getEmail().equals(userDto.getEmail()))
                 .collect(Collectors.toList());
         return !users.isEmpty();

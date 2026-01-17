@@ -4,11 +4,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-/**
- * TODO Sprint add-controllers.
- */
+import java.time.LocalDate;
+import java.util.List;
+
 @Data
-public class ItemDto {
+public class ItemWithBookingsDto {
     private Integer id;
     @NotBlank
     private String name;
@@ -17,4 +17,7 @@ public class ItemDto {
     private Integer owner;
     @NotNull
     private Boolean available;
+    private List<CommentDto> comments;
+    private LocalDate lastBooking;
+    private LocalDate nextBooking;
 }

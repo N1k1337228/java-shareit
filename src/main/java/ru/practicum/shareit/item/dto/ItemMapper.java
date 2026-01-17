@@ -21,4 +21,15 @@ public class ItemMapper {
         item.setAvailable(itemDto.getAvailable());
         return item;
     }
+
+    public ItemWithBookingsDto createItemDto(Item item) {
+        ItemWithBookingsDto dto = new ItemWithBookingsDto();
+        dto.setId(item.getId());
+        dto.setName(item.getName());
+        dto.setDescription(item.getDescription());
+        dto.setAvailable(item.getAvailable());
+        dto.setOwner(item.getOwner().getId());
+        dto.setComments(CommentMapper.toCommentDtoList(item.getComment()));
+        return dto;
+    }
 }
