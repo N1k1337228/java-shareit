@@ -21,7 +21,7 @@ public class ItemRequestController {
 
     @PostMapping
     public ResponseItemRequestDto createRequest(@RequestHeader("X-Sharer-User-Id") Integer userId, @RequestBody @Valid ItemRequestDto requestDto) {
-        return itemRequestService.createRequest(userId,requestDto);
+        return itemRequestService.createRequest(userId, requestDto);
     }
 
     @GetMapping
@@ -36,7 +36,7 @@ public class ItemRequestController {
     }
 
     @GetMapping("{requestId}")
-    public ResponseItemRequestDto getRequestOnId(@PathVariable Integer requestId ,@RequestHeader("X-Sharer-User-Id") Integer userId) {
-        return itemRequestService.getRequestOnId(requestId,userId);
+    public ResponseItemRequestDto getRequestOnId(@PathVariable Integer requestId, @RequestHeader("X-Sharer-User-Id") Integer userId) {
+        return itemRequestService.getRequestOnId(requestId, userId);
     }
 }
