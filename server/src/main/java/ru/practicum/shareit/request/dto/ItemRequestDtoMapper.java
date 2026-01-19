@@ -40,11 +40,9 @@ public class ItemRequestDtoMapper {
         itemResponseDto.setUserId(itemResponse.getUser() != null ? itemResponse.getUser().getId() : null);
         if (itemResponse.getItemName() != null && !itemResponse.getItemName().isEmpty()) {
             itemResponseDto.setName(itemResponse.getItemName());
-        }
-        else if (itemResponse.getItem() != null && itemResponse.getItem().getName() != null) {
+        } else if (itemResponse.getItem() != null && itemResponse.getItem().getName() != null) {
             itemResponseDto.setName(itemResponse.getItem().getName());
-        }
-        else {
+        } else {
             itemResponseDto.setName(null);
         }
 
