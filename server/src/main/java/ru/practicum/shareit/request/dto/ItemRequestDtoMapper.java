@@ -28,7 +28,6 @@ public class ItemRequestDtoMapper {
         if (itemRequest.getItemResponseList() == null || itemRequest.getItemResponseList().isEmpty()) {
             responseItemRequestDto.setItems(Collections.emptyList());
         } else {
-            // ВАЖНО: правильно маппим ItemResponse в ItemResponseDto
             responseItemRequestDto.setItems(toItemResponseDtoList(itemRequest.getItemResponseList()));
         }
         return responseItemRequestDto;
@@ -39,17 +38,12 @@ public class ItemRequestDtoMapper {
         itemResponseDto.setId(itemResponse.getId());
         itemResponseDto.setItemId(itemResponse.getItem() != null ? itemResponse.getItem().getId() : null);
         itemResponseDto.setUserId(itemResponse.getUser() != null ? itemResponse.getUser().getId() : null);
-
-        // ВАЖНО: БЕРЁМ ИМЯ ИЗ ItemResponse, а не из Item!
-        // Если в ItemResponse сохранено имя - используем его
         if (itemResponse.getItemName() != null && !itemResponse.getItemName().isEmpty()) {
             itemResponseDto.setName(itemResponse.getItemName());
         }
-        // Иначе берём из связанного Item (на всякий случай)
         else if (itemResponse.getItem() != null && itemResponse.getItem().getName() != null) {
             itemResponseDto.setName(itemResponse.getItem().getName());
         }
-        // Если ничего нет - оставляем null
         else {
             itemResponseDto.setName(null);
         }
@@ -60,7 +54,7 @@ public class ItemRequestDtoMapper {
     private static List<ItemResponseDto> toItemResponseDtoList(List<ItemResponse> itemResponses) {
         return itemResponses.stream()
                 .map(ItemRequestDtoMapper::toItemResponseDto)
-                .collect(Collectors.toList());  // ← используем collect вместо toList()
+                .collect(Collectors.toList());
     }
 
     public static List<ResponseItemRequestDto> responseItemRequestDtoList(List<ItemRequest> itemRequests) {
