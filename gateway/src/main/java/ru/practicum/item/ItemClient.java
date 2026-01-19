@@ -9,10 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.BaseClient;
 
-
 import java.util.Map;
-@Service
 
+@Service
 public class ItemClient extends BaseClient {
     private static final String API_PREFIX = "/items";
 
@@ -26,28 +25,28 @@ public class ItemClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> createItem(Integer userId,ItemDto itemDto) {
-        return post("",userId,null,itemDto);
+    public ResponseEntity<Object> createItem(Integer userId, ItemDto itemDto) {
+        return post("", userId, null, itemDto);
 
     }
 
-    public ResponseEntity<Object> updateItem(Integer userId,Integer itemId,ItemDto itemDto) {
-        return patch("/" + itemId,userId,null,itemDto);
+    public ResponseEntity<Object> updateItem(Integer userId, Integer itemId, ItemDto itemDto) {
+        return patch("/" + itemId, userId, null, itemDto);
 
     }
 
     public ResponseEntity<Object> getItem(Integer userId, Integer itemId) {
-        return get("/" + itemId,userId,null);
+        return get("/" + itemId, userId, null);
 
     }
 
     public ResponseEntity<Object> getUsersItems(Integer userId) {
-        return get("",userId,null);
+        return get("", userId, null);
 
     }
 
-    public ResponseEntity<Object> createComment(Integer userId,Integer itemId, CommentDto commentDto) {
-        return post("/" + itemId+"/comment",userId,null,commentDto);
+    public ResponseEntity<Object> createComment(Integer userId, Integer itemId, CommentDto commentDto) {
+        return post("/" + itemId + "/comment", userId, null, commentDto);
 
     }
 
@@ -55,7 +54,7 @@ public class ItemClient extends BaseClient {
         Map<String, Object> parameters = Map.of(
                 "text", text
         );
-        return get("/search?text={text}",null, parameters);
+        return get("/search?text={text}", null, parameters);
 
     }
 }

@@ -7,10 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
-
 import ru.practicum.BaseClient;
-
-
 
 import java.util.Map;
 
@@ -28,16 +25,6 @@ public class BookingClient extends BaseClient {
         );
     }
 
-//    public ResponseEntity<Object> getBookings(Integer userId, BookingState state, Integer from, Integer size) {
-//        Map<String, Object> parameters = Map.of(
-//                "state", state.name(),
-//                "from", from,
-//                "size", size
-//        );
-//        return get("?state={state}&from={from}&size={size}", userId, parameters);
-//    }
-
-
     public ResponseEntity<Object> bookItem(Integer userId, BookingDto requestDto) {
         return post("", userId, null, requestDto);
     }
@@ -49,24 +36,22 @@ public class BookingClient extends BaseClient {
 
     public ResponseEntity<Object> updateBooking(Integer userId, Integer bookingId, String approved) {
         Map<String, Object> parameters = Map.of(
-                "approved",approved
+                "approved", approved
         );
-        return patch("/" +bookingId+"?approved={approved}",userId,parameters,null);
+        return patch("/" + bookingId + "?approved={approved}", userId, parameters, null);
     }
 
     public ResponseEntity<Object> getBookingOnState(Integer userId, String state) {
         Map<String, Object> parameters = Map.of(
-                "state",state
+                "state", state
         );
-        return get("?state={state}",userId,parameters);
+        return get("?state={state}", userId, parameters);
     }
 
     public ResponseEntity<Object> getBookingOfCurrentUser(Integer userId, String state) {
         Map<String, Object> parameters = Map.of(
-                "state",state
+                "state", state
         );
-        return get("/owner?state={state}",userId,parameters);
+        return get("/owner?state={state}", userId, parameters);
     }
-
-
 }

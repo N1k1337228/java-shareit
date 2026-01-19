@@ -13,6 +13,7 @@ import ru.practicum.BaseClient;
 @Service
 public class UserClient extends BaseClient {
     private static final String API_PREFIX = "/users";
+
     @Autowired
     public UserClient(@Value("${server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
@@ -24,21 +25,21 @@ public class UserClient extends BaseClient {
     }
 
     public ResponseEntity<Object> getUser(Integer userId) {
-        return get("/" + userId,null,null);
+        return get("/" + userId, null, null);
     }
 
     public ResponseEntity<Object> updateUser(Integer userId, UserDto userDto) {
-        return patch("/" + userId, userId,null, userDto);
+        return patch("/" + userId, userId, null, userDto);
 
     }
 
     public ResponseEntity<Object> createUser(UserDto userDto) {
-        return post("",null, null, userDto);
+        return post("", null, null, userDto);
 
     }
 
     public ResponseEntity<Object> deleteUser(Integer userId) {
-        return delete("/" + userId,null,null);
+        return delete("/" + userId, null, null);
     }
 
 }

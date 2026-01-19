@@ -14,6 +14,5 @@ public class ItemDto {
     private Integer owner;
     @NotNull
     private Boolean available;
-    //@NotNull
     private Integer requestId;
 }
