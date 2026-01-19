@@ -7,6 +7,7 @@ import ru.practicum.shareit.user.User;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ItemRequestDtoMapper {
 
@@ -23,9 +24,11 @@ public class ItemRequestDtoMapper {
         responseItemRequestDto.setId(itemRequest.getId());
         responseItemRequestDto.setDescription(itemRequest.getRequestDescription());
         responseItemRequestDto.setCreated(itemRequest.getTimeOfCreate());
-        if (itemRequest.getItemResponseList() == null) {
+
+        if (itemRequest.getItemResponseList() == null || itemRequest.getItemResponseList().isEmpty()) {
             responseItemRequestDto.setItems(Collections.emptyList());
         } else {
+            // ВАЖНО: правильно маппим ItemResponse в ItemResponseDto
             responseItemRequestDto.setItems(toItemResponseDtoList(itemRequest.getItemResponseList()));
         }
         return responseItemRequestDto;
@@ -34,23 +37,35 @@ public class ItemRequestDtoMapper {
     private static ItemResponseDto toItemResponseDto(ItemResponse itemResponse) {
         ItemResponseDto itemResponseDto = new ItemResponseDto();
         itemResponseDto.setId(itemResponse.getId());
-        itemResponseDto.setItemId(itemResponse.getItem().getId());
-        itemResponseDto.setUserId(itemResponse.getUser().getId());
-        itemResponseDto.setName(itemResponse.getItemName());
+        itemResponseDto.setItemId(itemResponse.getItem() != null ? itemResponse.getItem().getId() : null);
+        itemResponseDto.setUserId(itemResponse.getUser() != null ? itemResponse.getUser().getId() : null);
+
+        // ВАЖНО: БЕРЁМ ИМЯ ИЗ ItemResponse, а не из Item!
+        // Если в ItemResponse сохранено имя - используем его
+        if (itemResponse.getItemName() != null && !itemResponse.getItemName().isEmpty()) {
+            itemResponseDto.setName(itemResponse.getItemName());
+        }
+        // Иначе берём из связанного Item (на всякий случай)
+        else if (itemResponse.getItem() != null && itemResponse.getItem().getName() != null) {
+            itemResponseDto.setName(itemResponse.getItem().getName());
+        }
+        // Если ничего нет - оставляем null
+        else {
+            itemResponseDto.setName(null);
+        }
+
         return itemResponseDto;
     }
 
     private static List<ItemResponseDto> toItemResponseDtoList(List<ItemResponse> itemResponses) {
         return itemResponses.stream()
                 .map(ItemRequestDtoMapper::toItemResponseDto)
-                .toList();
+                .collect(Collectors.toList());  // ← используем collect вместо toList()
     }
 
     public static List<ResponseItemRequestDto> responseItemRequestDtoList(List<ItemRequest> itemRequests) {
         return itemRequests.stream()
                 .map(ItemRequestDtoMapper::toResponseItemRequestDto)
-                .toList();
+                .collect(Collectors.toList());
     }
-
-
 }

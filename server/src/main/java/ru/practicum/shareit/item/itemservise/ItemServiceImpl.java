@@ -64,42 +64,28 @@ public class ItemServiceImpl implements ItemService {
         return dto;
     }
 
-    @Transactional  // ← ОБЯЗАТЕЛЬНО добавляем!
     public ItemDto addItem(ItemDto itemDto, int userId) {
-        // 1. Находим пользователя
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-
-        // 2. Если есть requestId - находим запрос ЗАРАНЕЕ
         ItemRequest request = null;
         if (itemDto.getRequestId() != null) {
             request = itemRequestRepository.findById(itemDto.getRequestId())
                     .orElseThrow(() -> new NotFoundException("Запрос не найден"));
         }
-
-        // 3. Создаем и сохраняем вещь
         Item item = itemMapper.fromItemDto(itemDto);
         item.setOwner(user);
-
-        // 4. Если есть запрос - связываем вещь с ним
         if (request != null) {
-            item.setItemRequest(request);  // ← устанавливаем связь в Item
+            item.setItemRequest(request);
         }
-
-        Item savedItem = itemRepository.save(item);  // ← сохраняем вещь (теперь у неё есть id!)
-
-        // 5. Если есть запрос - создаем ItemResponse
+        Item savedItem = itemRepository.save(item);
         if (request != null) {
             ItemResponse itemResponse = new ItemResponse();
             itemResponse.setUser(user);
-            itemResponse.setItem(savedItem);  // ← используем СОХРАНЕННУЮ вещь!
+            itemResponse.setItem(savedItem);
             itemResponse.setItemName(savedItem.getName());
-            itemResponse.setItemRequest(request);  // ← ВАЖНО: устанавливаем связь!
-
+            itemResponse.setItemRequest(request);
             itemResponseRepository.save(itemResponse);
         }
-
-        // 6. Возвращаем DTO
         return itemMapper.toItemDto(savedItem);
     }
 
