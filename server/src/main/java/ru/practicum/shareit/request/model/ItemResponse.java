@@ -7,7 +7,7 @@ import ru.practicum.shareit.user.User;
 
 @Data
 @Entity
-@Table(name = "response")
+@Table(name = "responses")
 public class ItemResponse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
